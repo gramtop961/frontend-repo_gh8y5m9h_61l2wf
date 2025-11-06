@@ -1,130 +1,61 @@
-import { useMemo } from 'react'
-import { Check, X, Download } from 'lucide-react'
+import React, { useMemo } from 'react';
+import { Check, X, Download } from 'lucide-react';
 
-function toCSV(rows) {
-  const headers = [
-    'id','nama','kontak','organisasi','ruangan','tanggal','mulai','selesai','alasan','status','dibuatPada'
-  ]
-  const escape = (v) => '"' + String(v ?? '').replaceAll('"', '""') + '"'
-  const lines = [headers.join(',')]
-  for (const r of rows) {
-    lines.push([
-      r.id,
-      r.name,
-      r.contact,
-      r.organization || '',
-      r.roomName,
-      r.date,
-      r.startTime,
-      r.endTime,
-      r.reason,
-      r.status,
-      new Date(r.createdAt).toISOString(),
-    ].map(escape).join(','))
-  }
-  return lines.join('\n')
-}
+export default function AdminDashboard({ theme, submissions, onApprove, onReject, onExport, onBackHome }) {
+  const isDark = theme === 'dark';
 
-function AdminDashboard({ submissions, onApprove, onReject, onGenerateLetter }) {
-  const pending = useMemo(() => submissions.filter(s => s.status === 'pending'), [submissions])
-
-  function handleDownloadCSV() {
-    const csv = toCSV(submissions)
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `srmms-submissions-${new Date().toISOString().slice(0,10)}.csv`
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-  }
+  const pendingCount = useMemo(() => submissions.filter(s => s.status === 'pending').length, [submissions]);
 
   return (
-    <section className="mt-6">
-      <div className="flex items-center justify-between">
+    <div className={`rounded-2xl p-4 ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200'}`}>
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Dashboard Admin</h2>
-          <p className="text-sm text-gray-500">Kelola pengajuan peminjaman ruangan.</p>
+          <h3 className={`${isDark ? 'text-white' : 'text-gray-900'} font-semibold`}>Dashboard Admin</h3>
+          <p className={`${isDark ? 'text-white/60' : 'text-gray-600'} text-sm`}>Menunggu: {pendingCount}</p>
         </div>
-        <button onClick={handleDownloadCSV} className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-gray-50">
-          <Download className="h-4 w-4" /> Unduh CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={onExport} className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}><Download size={16}/> Export CSV</button>
+          <button onClick={onBackHome} className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}>Kembali ke Home</button>
+        </div>
       </div>
 
-      <div className="mt-4 rounded-xl border bg-white shadow-sm overflow-hidden">
-        <div className="border-b px-4 py-3 text-sm text-gray-700">{pending.length} pengajuan menunggu persetujuan</div>
-        <div className="max-h-[480px] overflow-auto">
-          <table className="min-w-full text-sm">
-            <thead className="sticky top-0 bg-gray-50 text-gray-600">
-              <tr>
-                <th className="px-4 py-2 text-left">Pemohon</th>
-                <th className="px-4 py-2 text-left">Ruangan</th>
-                <th className="px-4 py-2 text-left">Tanggal & Waktu</th>
-                <th className="px-4 py-2 text-left">Alasan</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Aksi</th>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className={isDark ? 'text-white/70' : 'text-gray-600'}>
+              <th className="text-left py-2 px-2">Waktu</th>
+              <th className="text-left py-2 px-2">Pemohon</th>
+              <th className="text-left py-2 px-2">Ruangan</th>
+              <th className="text-left py-2 px-2">Tanggal</th>
+              <th className="text-left py-2 px-2">Jam</th>
+              <th className="text-left py-2 px-2">Status</th>
+              <th className="text-left py-2 px-2">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {submissions.map((s) => (
+              <tr key={s.id} className={`${isDark ? 'text-white/90' : 'text-gray-800'} border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                <td className="py-2 px-2">{new Date(s.createdAt).toLocaleString()}</td>
+                <td className="py-2 px-2">{s.name} · {s.organization}</td>
+                <td className="py-2 px-2">{s.roomName}</td>
+                <td className="py-2 px-2">{s.date}</td>
+                <td className="py-2 px-2">{s.startTime} - {s.endTime}</td>
+                <td className="py-2 px-2 capitalize">
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${s.status==='approved' ? (isDark ? 'bg-green-500/10 text-green-300 border border-green-500/30' : 'bg-green-50 text-green-700 border border-green-200') : s.status==='rejected' ? (isDark ? 'bg-red-500/10 text-red-300 border border-red-500/30' : 'bg-red-50 text-red-700 border border-red-200') : (isDark ? 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/30' : 'bg-yellow-50 text-yellow-700 border border-yellow-200')}`}>
+                    {s.status}
+                  </span>
+                </td>
+                <td className="py-2 px-2">
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => onApprove(s.id)} className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}><Check size={14}/> Setujui</button>
+                    <button onClick={() => onReject(s.id)} className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}><X size={14}/> Tolak</button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {submissions.length === 0 && (
-                <tr>
-                  <td className="px-4 py-6 text-center text-gray-500" colSpan={6}>Belum ada data pengajuan.</td>
-                </tr>
-              )}
-              {submissions.map((s) => (
-                <tr key={s.id} className="border-t">
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-gray-900">{s.name}</div>
-                    <div className="text-gray-500">{s.contact}{s.organization ? ` • ${s.organization}` : ''}</div>
-                  </td>
-                  <td className="px-4 py-3">{s.roomName}</td>
-                  <td className="px-4 py-3">
-                    <div>{new Date(s.date).toLocaleDateString('id-ID')}</div>
-                    <div className="text-gray-500">{s.startTime} - {s.endTime}</div>
-                  </td>
-                  <td className="px-4 py-3 max-w-xs">
-                    <div className="line-clamp-3">{s.reason}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                      s.status === 'approved' ? 'bg-emerald-50 text-emerald-700' : s.status === 'rejected' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'
-                    }`}>
-                      {s.status === 'approved' ? 'Disetujui' : s.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => onApprove(s)}
-                        className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1.5 text-white hover:bg-emerald-700 disabled:opacity-50"
-                        disabled={s.status !== 'pending'}
-                      >
-                        <Check className="h-4 w-4" /> Setujui
-                      </button>
-                      <button
-                        onClick={() => onReject(s)}
-                        className="inline-flex items-center gap-1 rounded-md bg-rose-600 px-2.5 py-1.5 text-white hover:bg-rose-700 disabled:opacity-50"
-                        disabled={s.status !== 'pending'}
-                      >
-                        <X className="h-4 w-4" /> Tolak
-                      </button>
-                      <button
-                        onClick={() => onGenerateLetter(s)}
-                        className="rounded-md border px-2.5 py-1.5 text-gray-700 hover:bg-gray-50"
-                        disabled={s.status !== 'approved'}
-                      >
-                        Surat
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </section>
-  )
+    </div>
+  );
 }
-
-export default AdminDashboard

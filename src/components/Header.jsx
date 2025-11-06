@@ -1,41 +1,43 @@
-import { Home, Settings, Bell } from 'lucide-react'
+import React from 'react';
+import { Bell, Settings, Moon, Sun } from 'lucide-react';
 
-function Header({ onToggleAdmin, isAdminOpen, pendingCount = 0 }) {
+export default function Header({ pendingCount = 0, theme, setTheme, onHome }) {
+  const isDark = theme === 'dark';
   return (
-    <header className="w-full border-b bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <header className={`sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-white/60 ${isDark ? 'bg-[#0a0b10]/70 border-b border-white/10' : 'bg-white/70 border-b border-gray-200'}`}>
+      <div className="mx-auto max-w-7xl px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex items-center justify-center">
-            <Home className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-gray-900">
-              Smart Room Management & Monitoring System
-            </h1>
-            <p className="text-sm text-gray-500 -mt-0.5">BEM Dirdikma Sarpras</p>
+          <div className={`h-9 w-9 rounded-xl ${isDark ? 'bg-gradient-to-br from-cyan-500 to-fuchsia-600' : 'bg-gradient-to-br from-blue-600 to-violet-600'}`} />
+          <div className="flex flex-col">
+            <span className={`text-sm ${isDark ? 'text-white/70' : 'text-gray-500'}`}>SRMMS</span>
+            <strong className={`${isDark ? 'text-white' : 'text-gray-900'}`}>Smart Rooms</strong>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-3">
+          <button onClick={onHome} className={`hidden md:inline-flex items-center rounded-lg px-3 py-1.5 text-sm ${isDark ? 'bg-white/10 text-white hover:bg-white/15' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}>Home</button>
+
           <div className="relative">
-            <Bell className="h-5 w-5 text-gray-600" />
-            {pendingCount > 0 && (
-              <span className="absolute -top-2 -right-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-600 px-1.5 text-xs font-semibold text-white">
-                {pendingCount}
-              </span>
-            )}
+            <button className={`relative inline-flex items-center gap-2 rounded-lg px-3 py-1.5 ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}>
+              <Bell size={18} />
+              <span className="text-sm">Notifikasi</span>
+              {pendingCount > 0 && (
+                <span className={`absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full text-xs flex items-center justify-center ${isDark ? 'bg-cyan-500 text-white' : 'bg-blue-600 text-white'}`}>{pendingCount}</span>
+              )}
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onToggleAdmin}
-            className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium ${isAdminOpen ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
-          >
-            <Settings className="h-4 w-4" />
-            {isAdminOpen ? 'Tutup Admin' : 'Admin Area'}
+
+          <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}>
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            <span className="text-sm">{isDark ? 'Light' : 'Dark'}</span>
+          </button>
+
+          <button className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 ${isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'}`}>
+            <Settings size={18} />
+            <span className="text-sm">Pengaturan</span>
           </button>
         </div>
       </div>
     </header>
-  )
+  );
 }
-
-export default Header
