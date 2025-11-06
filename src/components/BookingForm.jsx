@@ -16,6 +16,8 @@ function BookingForm({ room, picked, onCancel, onSubmitted }) {
     contact: '',
     reason: '',
     organization: '',
+    startTime: picked?.timeRange?.split(' - ')[0] || '08:00',
+    endTime: picked?.timeRange?.split(' - ')[1] || '10:00',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -28,9 +30,8 @@ function BookingForm({ room, picked, onCancel, onSubmitted }) {
     setError('')
 
     try {
-      // In real app this posts to backend API. For now, simulate success.
-      await new Promise((res) => setTimeout(res, 700))
-      onSubmitted({ ...form, roomId: room.id, roomName: room.name, ...picked })
+      await new Promise((res) => setTimeout(res, 600))
+      onSubmitted({ ...form, roomId: room.id, roomName: room.name, date: picked.date })
     } catch (err) {
       setError('Gagal mengirim pengajuan. Coba lagi.')
     } finally {
@@ -70,6 +71,24 @@ function BookingForm({ room, picked, onCancel, onSubmitted }) {
             placeholder="Himpunan/BEM/Unit"
           />
         </Field>
+        <Field label="Jam Mulai">
+          <input
+            type="time"
+            required
+            value={form.startTime}
+            onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+            className="w-full rounded-md border px-3 py-2 text-sm"
+          />
+        </Field>
+        <Field label="Jam Selesai">
+          <input
+            type="time"
+            required
+            value={form.endTime}
+            onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+            className="w-full rounded-md border px-3 py-2 text-sm"
+          />
+        </Field>
         <Field label="Alasan Pengajuan">
           <textarea
             required
@@ -82,7 +101,7 @@ function BookingForm({ room, picked, onCancel, onSubmitted }) {
 
         <div className="sm:col-span-2 flex items-center justify-between pt-2">
           <p className="text-sm text-gray-600">
-            {room.name} • {new Date(picked.date).toLocaleDateString('id-ID')} • {picked.timeRange}
+            {room.name} • {new Date(picked.date).toLocaleDateString('id-ID')} • {form.startTime} - {form.endTime}
           </p>
 
           <div className="flex gap-3">

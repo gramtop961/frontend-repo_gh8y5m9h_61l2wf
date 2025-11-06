@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Clock, CheckCircle2, XCircle } from 'lucide-react'
 
-// Simple mocked availability slots for demo purpose
-const defaultSlots = {
-  morning: { label: '08:00 - 10:00', available: true },
-  mid: { label: '10:00 - 12:00', available: false },
-  noon: { label: '13:00 - 15:00', available: true },
-  evening: { label: '15:00 - 17:00', available: true },
+// Base time slots shown to users
+const baseSlots = {
+  morning: { label: '08:00 - 10:00' },
+  mid: { label: '10:00 - 12:00' },
+  noon: { label: '13:00 - 15:00' },
+  evening: { label: '15:00 - 17:00' },
 }
 
 function Slot({ id, slot, selected, onSelect }) {
@@ -30,10 +30,17 @@ function Slot({ id, slot, selected, onSelect }) {
   )
 }
 
-function AvailabilityCalendar({ room, onProceed }) {
+function AvailabilityCalendar({ room, computeAvailability, onProceed }) {
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
-  const [slots, setSlots] = useState(defaultSlots)
   const [selected, setSelected] = useState(null)
+
+  const slots = useMemo(() => {
+    const entries = Object.entries(baseSlots).map(([id, s]) => {
+      const available = computeAvailability ? computeAvailability(room, date, s.label) : true
+      return [id, { ...s, available }]
+    })
+    return Object.fromEntries(entries)
+  }, [room, date, computeAvailability])
 
   function handleSelect(id) {
     setSelected(id)
